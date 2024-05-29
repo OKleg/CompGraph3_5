@@ -1,0 +1,116 @@
+<!DOCTYPE <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Web GL lab 3-6</title>
+    <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+    integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+    crossorigin="anonymous"
+    defer></script>
+    <script  src="js/res/sylvester.js" defer ></script>
+    <script  src="js/res/gl-matrix.js" defer ></script>
+    <script  src="js/res/utils.js" defer ></script>
+    <script  src="js/res/webgl-utils.js" defer ></script>
+
+    <script  src="js/init_buffer.js" defer ></script>
+    <script  src="js/init_shader.js" defer ></script>
+    <script  src="js/glFunc.js" defer ></script>
+
+    <script  src="model/cube.js" type="module" ></script>
+    <script  src="model/sphere.js" type="module" ></script>
+
+    <script  src="js/lab1_2.js" defer ></script>
+    <script  src="js/lab_3_6.js" type="module" ></script>
+
+  </head>
+
+  <body>
+    <h1>WebGL </h1>
+    <h2>Lab 1 </h2>
+    <canvas id="glcanvas1" width="600dp" height="480" style="background-color: gray;"></canvas>
+    <canvas id="glcanvas2" width="600dp" height="480" style="background-color: gray;"></canvas>
+    <h2>Lab 2 </h2>
+    <canvas id="glcanvas3" width="600dp" height="480" style="background-color: gray;"></canvas>
+    <canvas id="glcanvas4" width="600dp" height="480" style="background-color: gray;"></canvas>
+    <canvas id="glcanvas5" width="600dp" height="480" style="background-color: gray;"></canvas>
+    <canvas id="glcanvas6" width="600dp" height="480" style="background-color: gray;"></canvas>
+
+    <div>
+        <h2>Lab 3 - 5 (6) </h2>
+        <canvas id="glcanvas31" width="2080" height="720" style="background-color: gray;" ></canvas>
+        <div>
+          <div id="Rotation_div">
+            <label>Rotation</label>
+            <label>x</label>
+            <input type="range" value="0" min="-360"max="360" step="1" id="xRotate">
+            <label>y</label>
+            <input type="range" value="0" min="-360"max="360" step="1"  id="yRotate">
+            <label>z</label>
+            <input type="range" value="0" min="-360"max="360" step="1"  id="zRotate">
+          <label>Тип вращения</label>
+            <select id="rotationId">
+              <option value='1' itemid="1" >Вокруг центра фигуры</option>
+              <option value='2'itemid="2">Вокруг центра сцены</option>
+              <option value='3'itemid="2">Вокруг центров елементов фигуры</option>
+            </select>
+          </div>
+            <br>
+          
+          <div id="Offset_shading_lighting_div">
+            <label>Offset</label>
+            <label>x</label>
+            <input type="range" value="0" min="-3"max="3" step="0.01" id="xOffset">
+            <label>y</label>
+            <input type="range" value="0" min="-3"max="3" step="0.01"  id="yOffset">
+            <label>z</label>
+            <input type="range" value="-5" min="-15"max="3" step="0.01"  id="zOffset">
+        
+            <label>Shading: </label>
+            <select id="shadingId">
+              <option value='1'itemid="1">Fong</option>
+              <option value='2' itemid="2" >Guro</option>
+            </select>
+            <label>Lighting: </label>
+            <select id="lightingId">
+              <option value='2'itemid="2">Fong</option>
+              <option value='1' itemid="1" >Lambert</option>
+              <option value='0' itemid="0" >Без освещения</option>
+            </select>
+            <label>Линейная</label>
+            <input type="range" value="0.1" min="0"max="1" step="0.01" id="lin_attenuation">
+            <label>Квадратичная</label>
+            <input type="range" value="0.1" min="0"max="1" step="0.01"  id="quad_attenuation">
+          </div>
+            <br>
+            <div id="texture_div">
+           
+            <label>Текстурирование</label>
+            <select id="textureId">
+              <option value='1' itemid="1" >Стандартный цвет</option>
+              <option value='2'itemid="2">Текстуры кубиков</option>
+              <option value='3'itemid="3">Текстуры номеров</option>
+              <option value='4'itemid="4">Смешивание числа с текстурой</option>
+              <option value='5'itemid="5">Смешивание числа, текстуры и цвета</option>
+            </select>
+            <label>light</label>
+            <input type="color" title="light" value="#ff0000" id="light"/>
+            <label>ambient</label>
+            <input type="color" title="ambient" value="#ff0000" id="ambient"/>
+            <label>diffuse</label>
+            <input type="color" title="diffuse" value="#ff0000" id="diffuse"/>
+            <label>specular</label>
+            <input type="color" title="specular" value="#ff0000" id="specular"/>
+            <label>Фигура</label>
+            <select id="figureId">
+              <option value='1' itemid="1" >Пьедистал</option>
+              <option value='2'itemid="2">Апeльсин</option>
+            </select>
+          </div>
+        </div>
+    </div>
+    <h2>Lab 7 </h2>
+  </body>
+</html>
