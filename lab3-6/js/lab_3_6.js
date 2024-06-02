@@ -112,36 +112,37 @@ void main(void) {
 	vec4 tex1Color = texture(u1Sampler, vTextureCoord);
 	vec4 tex2Color = texture(u2Sampler, vTextureCoord);
 	vec4 tex3Color = texture(u3Sampler, vTextureCoord);
-
-	fragColor = vec4(vLightWeighting.rgb * vColor.rgb, vColor.a);
-
+	
+	vec4 resColor = vec4(vLightWeighting.rgb * vColor.rgb, vColor.a);
 	switch (uTextureFlag) {
 		case 1:
-			//С цветом
-			fragColor = vec4(vLightWeighting.rgb * vColor.rgb * vAttenuation, vColor.a);	    
+			//Только цвет
+			resColor = vec4( vColor.rgb , vColor.a);	    
 			break;
 		case 2:
-			//С первой текстурой
-			fragColor = vec4(vLightWeighting.rgb * tex1Color.rgb * vAttenuation, tex1Color.a * vColor.a);
+			//3)материала с текстурой номеров
+			//resColor =  mix(tex1Color,tex2Color,tex2Color.w *texture_contrib);
+			resColor = vec4(texture_contrib*tex1Color.rgb + (1.0 - texture_contrib)*tex2Color.rgb, texture_contrib*tex1Color.a+ (1.0 - texture_contrib)*tex2Color.a);
 			break;
 		case 3:
-			//Со второй текстурой
-			fragColor = vec4(vLightWeighting.rgb * tex2Color.rgb * vAttenuation, tex2Color.a * vColor.a);
+			//1)Текстуры номеров
+			resColor = vec4(tex2Color.rgb,tex2Color.a * vColor.a);
 			break;
 		case 4:
-			//С первой и второй текстурой
-			fragColor = vec4(vLightWeighting.rgb * mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb * vAttenuation, tex1Color.a * tex2Color.a);
+			//2)текстуры номеров с цветом кубиков
+			resColor = vec4(texture_contrib*vColor.rgb + (1.0 - texture_contrib)*tex2Color.rgb, texture_contrib*vColor.a+ (1.0 - texture_contrib)*tex2Color.a);
 			break;
 		case 5:
-			//С цветом, первой и второй текстурой
-			fragColor = vec4(vLightWeighting.rgb * mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb * vColor.rgb * vAttenuation, tex1Color.a * tex2Color.a * vColor.a);
+			//4)Цвет + текстуру материала + текстуру номеров
+			//resColor = vec4(vColor.rgb * mix(tex2Color.rgb,tex1Color.rgb,tex1Color.w * texture_contrib).rgb  , tex1Color.a * vColor.a);
+			resColor = texture_contrib*tex1Color+(1.0 - texture_contrib)*(texture_contrib*vColor + (1.0 - texture_contrib)*tex2Color);
 			break;
 		case 6:
 			// BUMP (след лаба)
-			fragColor = vec4(vLightWeighting.rgb * tex3Color.rgb * vAttenuation, tex3Color.a * vColor.a);
+			resColor = vec4( tex3Color.rgb , tex3Color.a * vColor.a);
 			break;
 	}
-
+	fragColor = vec4(vLightWeighting.rgb * resColor.rgb * vAttenuation, resColor.a);;
 } 
 
 `;
@@ -282,13 +283,14 @@ void main(void) {
 	switch (uTextureFlag) {
 	case 1:
 		//С цветом
-		combinedColor = vColor;	    
+		combinedColor = vColor;
 		break;
 	case 2:
 		//С первой текстурой (3. Добавить на кубики текстуры с каким-нибудь материалом и смешать с текстурой номеров (иметь возможность менять вклад текстур))
 		//combinedColor = vec4( mix(vColor.rgb, tex2Color.rgb, tex2Color.w * texture_contrib).rgb,vColor.a * tex2Color.a);
 		combinedColor = mix(tex1Color, tex2Color, tex2Color.w * texture_contrib);
 		// vec4(tex1Color.rgb, tex1Color.a * vColor.a);
+		
 		break;
 	case 3:
 		//Со второй текстурой ( 1. Наложить на кубики пьедестала текстуры с номерами 1,2,3)
@@ -298,19 +300,25 @@ void main(void) {
 		//С первой и второй текстурой (2. Смешать текстуры номеров с цветом кубиков)
 		combinedColor = mix(vColor, tex2Color, tex2Color.w * texture_contrib);
 		// vec4( mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb , tex1Color.a * tex2Color.a);
+		//combinedColor = vColor * mix(tex2Color,tex1Color,texture_contrib);
 		break;
 	case 5:
 		//Смешать для кубиков цвет+текстуру материала+ текстуру номеров
-		//vec4 combined_texture = mix(tex2Color, tex1Color, tex2Color.w * texture_contrib);
-		//combined_texture = mix(combined_texture, tex1Color, tex1Color.w * texture_contrib);
-		vec4 combined_texture =  mix(vColor, tex2Color, tex2Color.w * texture_contrib);
-		combinedColor = mix(combined_texture, tex1Color, tex1Color.w * texture_contrib);
-		//combinedColor = vec4( mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb * vColor.rgb , tex1Color.a * tex2Color.a * vColor.a);
+		// MIX
+		// vec4 combined_texture =  mix(vColor, tex2Color, tex2Color.w * texture_contrib);
+		// combinedColor = mix(combined_texture, tex1Color, tex1Color.w * texture_contrib);
+		
+		//resColor = texture_contrib*tex1Color+(1.0 - texture_contrib)*(texture_contrib*vColor + (1.0 - texture_contrib)*tex2Color);
+
+
+		//combinedColor = vec4( mix(tex2Color.rgb,tex1Color.rgb,texture_contrib).rgb * vColor.rgb , tex1Color.a * vColor.a );
+		//combinedColor = vec4(vColor.rgb * mix(tex2Color.rgb,tex1Color.rgb,tex1Color.w * texture_contrib).rgb  , tex1Color.a * vColor.a);
+		//combinedColor = mix(vColor * tex1Color,mix(vColor, tex2Color, tex2Color.w * texture_contrib) ,texture_contrib);
+		combinedColor = vColor * mix(tex2Color,tex1Color,tex1Color.w * texture_contrib);
 		break;
 	case 6:
 		// BUMP
-		
-		//fragColor = vec4(vLightWeighting.rgb * tex3Color.rgb * vAttenuation, tex3Color.a * vColor.a);
+		combinedColor = vec4(tex3Color.rgb, tex3Color.a * vColor.a);
 		break;
 	}
 	fragColor = vec4(vLightWeighting.rgb * combinedColor.rgb * vAttenuation, combinedColor.a);
@@ -490,7 +498,7 @@ function baseInit(callback) {
 		"glowstone.png",
 		"bumpMap2.jpg",
 		"orange.jpg",
-		"orange_ao.jpg",
+		"orange_ao.jpg"
 		], function() {
 			models['sphere'] = getSphereElements(1,30,30);
 			drawScene();	
