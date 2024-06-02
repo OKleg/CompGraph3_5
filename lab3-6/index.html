@@ -38,18 +38,18 @@
     <canvas id="glcanvas5" width="600dp" height="480" style="background-color: gray;"></canvas>
     <canvas id="glcanvas6" width="600dp" height="480" style="background-color: gray;"></canvas>
 
-    <div>
+    <div id="lab3_5_div" style="background-color: rgb(39, 37, 37);">
         <h2>Lab 3 - 5 (6) </h2>
         <canvas id="glcanvas31" width="2080" height="720" style="background-color: gray;" ></canvas>
         <div>
           <div id="Rotation_div">
             <label>Rotation</label>
             <label>x</label>
-            <input type="range" value="0" min="-360"max="360" step="1" id="xRotate">
+            <input type="range" value="0.0" min="-360"max="360" step="0.5" id="xRotate">
             <label>y</label>
-            <input type="range" value="0" min="-360"max="360" step="1"  id="yRotate">
+            <input type="range" value="0.0" min="-360"max="360" step="0.5"  id="yRotate">
             <label>z</label>
-            <input type="range" value="0" min="-360"max="360" step="1"  id="zRotate">
+            <input type="range" value="0.0" min="-360"max="360" step="0.5"  id="zRotate">
           <label>Тип вращения</label>
             <select id="rotationId">
               <option value='1' itemid="1" >Вокруг центра фигуры</option>
@@ -62,27 +62,27 @@
           <div id="Offset_shading_lighting_div">
             <label>Offset</label>
             <label>x</label>
-            <input type="range" value="0" min="-3"max="3" step="0.01" id="xOffset">
+            <input type="range" value="0.0" min="-3"max="3" step="0.01" id="xOffset">
             <label>y</label>
-            <input type="range" value="0" min="-3"max="3" step="0.01"  id="yOffset">
+            <input type="range" value="0.0" min="-3"max="3" step="0.01"  id="yOffset">
             <label>z</label>
-            <input type="range" value="-5" min="-15"max="3" step="0.01"  id="zOffset">
+            <input type="range" value="-5.0" min="-15"max="3" step="0.01"  id="zOffset">
         
             <label>Shading: </label>
             <select id="shadingId">
-              <option value='1'itemid="1">Fong</option>
-              <option value='2' itemid="2" >Guro</option>
+              <option value="1" itemid="1" >Guro</option>
+              <option value="2" itemid="2">Fong</option>
             </select>
             <label>Lighting: </label>
             <select id="lightingId">
-              <option value='2'itemid="2">Fong</option>
               <option value='1' itemid="1" >Lambert</option>
+              <option value='2'itemid="2">Fong</option>
               <option value='0' itemid="0" >Без освещения</option>
             </select>
             <label>Линейная</label>
-            <input type="range" value="0.1" min="0"max="1" step="0.01" id="lin_attenuation">
+            <input type="range" value="0.0" min="0"max="1" step="0.01" id="lin_attenuation">
             <label>Квадратичная</label>
-            <input type="range" value="0.1" min="0"max="1" step="0.01"  id="quad_attenuation">
+            <input type="range" value="0.0" min="0"max="1" step="0.01"  id="quad_attenuation">
           </div>
             <br>
             <div id="texture_div">
@@ -91,10 +91,13 @@
             <select id="textureId">
               <option value='1' itemid="1" >Стандартный цвет</option>
               <option value='2'itemid="2">Текстуры кубиков</option>
-              <option value='3'itemid="3">Текстуры номеров</option>
-              <option value='4'itemid="4">Смешивание числа с текстурой</option>
-              <option value='5'itemid="5">Смешивание числа, текстуры и цвета</option>
+              <option value='3'itemid="3">1)Текстуры номеров</option>
+              <option value='4'itemid="4">2)Смешивание числа с текстурой</option>
+              <option value='5'itemid="5">Цвет+текстуру материала+ текстуру номеров</option>
+              <option value='6'itemid="6">BUMP</option>
+
             </select>
+            <input type="range" value="0" min="0"max="1" step="0.01"  id="texture_contrib">
             <label>light</label>
             <input type="color" title="light" value="#ff0000" id="light"/>
             <label>ambient</label>
@@ -103,6 +106,7 @@
             <input type="color" title="diffuse" value="#ff0000" id="diffuse"/>
             <label>specular</label>
             <input type="color" title="specular" value="#ff0000" id="specular"/>
+            
             <label>Фигура</label>
             <select id="figureId">
               <option value='1' itemid="1" >Пьедистал</option>
@@ -111,6 +115,6 @@
           </div>
         </div>
     </div>
-    <h2>Lab 7 </h2>
+    <!-- <h2>Lab 7 </h2> -->
   </body>
 </html>

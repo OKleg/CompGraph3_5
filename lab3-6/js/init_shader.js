@@ -2,9 +2,8 @@
 // Initialize a shader program, so WebGL knows how to draw our data
 //
 function initShaderProgram(gl, vsSource, fsSource) {
-    console.log("VERTEX_SHADER");
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-    console.log("FRAGMENT_SHADER");
+  
     const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
     // Create the shader program
     const shaderProgram = gl.createProgram();

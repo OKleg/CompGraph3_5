@@ -1,62 +1,62 @@
+
 import { getCubeElements } from '../model/cube.js';
 import { getSphereElements } from '../model/sphere.js';
 
 const vsGuro = `#version 300 es
-	in vec3 aVertexPosition;
-	in vec3 aVertexNormal;
-	in vec4 aVertexColor;
-	in vec2 aTextureCoord;
+precision highp float;
+in vec3 aVertexPosition;
+in vec3 aVertexNormal;
+in vec4 aVertexColor;
+in vec2 aTextureCoord;
 
-	uniform mat4 mvMatrix;
-	uniform mat4 prMatrix;
-	uniform mat3 nMatrix;
+uniform mat4 mvMatrix;
+uniform mat4 prMatrix;
+uniform mat3 nMatrix;
 
-	uniform vec3 uLightColor;
-	uniform vec3 uLightPosition;
-	//Для источника света
-	uniform vec3 uAmbientLightColor;
-	uniform vec3 uDiffuseLightColor;
-	uniform vec3 uSpecularLightColor;
+uniform vec3 uLightColor;
+uniform vec3 uLightPosition;
+uniform vec3 uAmbientLightColor;
+uniform vec3 uDiffuseLightColor;
+uniform vec3 uSpecularLightColor;
 
-	uniform float uShininess;
-	uniform float roughness;
-	uniform float intensity;
-	uniform float F0;
+uniform float uShininess;
 
-	uniform float lin_attenuation;
-	uniform float quad_attenuation;
+uniform float lin_attenuation;
+uniform float quad_attenuation;
 
-	uniform int uLightFlag;
-	uniform int uShadingFlag;
+uniform int uLightFlag;
+uniform int uShadingFlag;
 
-	out vec3 vLightWeighting;
-	out lowp vec4 vColor;
-	out highp vec2 vTextureCoord;
-	out highp float vAttenuation;
-	
-	vec3 LambertLight(vec3 lightDirection, vec3 normal) {
-		float diffuseLightDot = max(dot(normal, lightDirection), 0.0);
-		return(uAmbientLightColor + uDiffuseLightColor * diffuseLightDot);
-	}
+out vec3 vLightWeighting;
+out lowp vec4 vColor;
+out highp vec2 vTextureCoord;
+out highp float vAttenuation;
 
-	vec3 FongLight(vec3 lightDirection, vec3 normal, vec3 vertexPositionEye3) {
-		float diffuseLightDot = max(dot(normal, lightDirection), 0.0);
 
-		// Normalize view vector
-		vec3 viewVectorEye = normalize(-vertexPositionEye3);
+vec3 LambertLight(vec3 lightDirection, vec3 normal) {
+	float diffuseLightDot = max(dot(normal, lightDirection), 0.0);
+	return( uDiffuseLightColor * diffuseLightDot);
+}
 
-		// получаем вектор отраженного луча
-		vec3 reflectionVector = reflect(-lightDirection, normal);
+vec3 FongLight(vec3 lightDirection, vec3 normal, vec3 vertexPositionEye3) {
+	float diffuseLightDot = max(dot(normal, lightDirection), 0.0);
 
-		// Вычисляем specular
-		float specularLightDot = max(dot(reflectionVector, viewVectorEye), 0.0);
-		float specularLightParam = pow(specularLightDot, uShininess);
+	// Normalize view vector
+	vec3 viewVectorEye = normalize(-vertexPositionEye3);
 
-		// (ambient + diffuse + specular)
-		return(uAmbientLightColor + uDiffuseLightColor * diffuseLightDot + uSpecularLightColor * specularLightParam);
-	}
+	// Вычисляем отражения
+	vec3 reflectionVector = reflect(-lightDirection, normal);
 
-	void main(void) {
+	// Вычисляем specular
+	float specularLightDot = max(dot(reflectionVector, viewVectorEye), 0.0);
+	float specularLightParam = pow(specularLightDot, uShininess);
+
+	// (ambient + diffuse + specular)
+	return(uAmbientLightColor + uDiffuseLightColor * diffuseLightDot + uSpecularLightColor * specularLightParam);
+}
+
+
+void main(void) {
 	// Установка позиции наблюдателя сцены
 	vec4 vertexPositionEye4 = mvMatrix * vec4(aVertexPosition, 1.0);
 	vec3 vertexPositionEye3 = vertexPositionEye4.xyz / vertexPositionEye4.w;
@@ -75,10 +75,9 @@ const vsGuro = `#version 300 es
 	if (uShadingFlag == 1) {
 		//Ламберт
 		if (uLightFlag == 1) { vLightWeighting = LambertLight(lightDirection, normal); };
-
+		
 		//Фонг
 		if (uLightFlag == 2) { vLightWeighting = FongLight(lightDirection, normal, vertexPositionEye3); };
-
 	}
 
 	// Трансформируем
@@ -88,55 +87,63 @@ const vsGuro = `#version 300 es
 	vColor = aVertexColor;
 	vTextureCoord = aTextureCoord;
 	vAttenuation = aAttenuation;
-
-	}
-
+}
 `;
 const fsGuro = `#version 300 es
-	precision mediump float;
-	in vec3 vLightWeighting;
-	in vec2 vTextureCoord;
-	in lowp vec4 vColor;
-	in highp float vAttenuation;
-	uniform sampler2D u1Sampler;
-	uniform sampler2D u2Sampler;
-	uniform sampler2D u3Sampler;
-	uniform int uTextureFlag;
-	uniform float texture_contrib;
-	out vec4 fragColor;
-	void main(void) {
 
-		vec4 tex1Color = texture(u1Sampler, vTextureCoord);
-		vec4 tex2Color = texture(u2Sampler, vTextureCoord);
-		vec4 tex3Color = texture(u3Sampler, vTextureCoord);
-		fragColor = vec4(vLightWeighting.rgb * vColor.rgb, vColor.a);
-		switch (uTextureFlag) {
+precision mediump float;
+
+in vec3 vLightWeighting;
+in vec2 vTextureCoord;
+in lowp vec4 vColor;
+in highp float vAttenuation;
+
+uniform sampler2D u1Sampler;
+uniform sampler2D u2Sampler;
+uniform sampler2D u3Sampler;
+
+uniform int uTextureFlag;
+uniform float texture_contrib;
+
+out vec4 fragColor;
+
+void main(void) {
+
+	vec4 tex1Color = texture(u1Sampler, vTextureCoord);
+	vec4 tex2Color = texture(u2Sampler, vTextureCoord);
+	vec4 tex3Color = texture(u3Sampler, vTextureCoord);
+
+	fragColor = vec4(vLightWeighting.rgb * vColor.rgb, vColor.a);
+
+	switch (uTextureFlag) {
 		case 1:
-		    //С цветом
+			//С цветом
 			fragColor = vec4(vLightWeighting.rgb * vColor.rgb * vAttenuation, vColor.a);	    
 			break;
 		case 2:
-		    //С первой текстурой
+			//С первой текстурой
 			fragColor = vec4(vLightWeighting.rgb * tex1Color.rgb * vAttenuation, tex1Color.a * vColor.a);
-		    break;
+			break;
 		case 3:
-		    //Со второй текстурой
+			//Со второй текстурой
 			fragColor = vec4(vLightWeighting.rgb * tex2Color.rgb * vAttenuation, tex2Color.a * vColor.a);
-		    break;
+			break;
 		case 4:
-		    //С первой и второй текстурой
+			//С первой и второй текстурой
 			fragColor = vec4(vLightWeighting.rgb * mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb * vAttenuation, tex1Color.a * tex2Color.a);
-		    break;
+			break;
 		case 5:
 			//С цветом, первой и второй текстурой
-		    fragColor = vec4(vLightWeighting.rgb * mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb * vColor.rgb * vAttenuation, tex1Color.a * tex2Color.a * vColor.a);
-		    break;
+			fragColor = vec4(vLightWeighting.rgb * mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb * vColor.rgb * vAttenuation, tex1Color.a * tex2Color.a * vColor.a);
+			break;
 		case 6:
-			// BUMP 
-		    fragColor = vec4(vLightWeighting.rgb * tex3Color.rgb * vAttenuation, tex3Color.a * vColor.a);
-		    break;
-		}
+			// BUMP (след лаба)
+			fragColor = vec4(vLightWeighting.rgb * tex3Color.rgb * vAttenuation, tex3Color.a * vColor.a);
+			break;
 	}
+
+} 
+
 `;
 
 const vsFong = `#version 300 es
@@ -186,7 +193,8 @@ vLightDirection = lightDirection;
 vPositionEye3 = vertexPositionEye3;
 vAttenuation = aAttenuation;
 vNormal = normal;
-}`;
+}
+`;
 
 const fsFong = `#version 300 es
 
@@ -201,7 +209,6 @@ in highp vec3 vLightDirection;
 in highp float vAttenuation;
 
 uniform vec3 uLightColor;
-//Для источника света
 uniform vec3 uAmbientLightColor;
 uniform vec3 uDiffuseLightColor;
 uniform vec3 uSpecularLightColor;
@@ -231,9 +238,10 @@ float BUMPmapping(vec2 vTextureCoord) {
 	return vTextureCoord.x * xHeightDelta + vTextureCoord.y * yHeightDelta;
 }
 
+
 vec3 LambertLight(vec3 lightDirection, vec3 normal) {
 	float diffuseLightDot = max(dot(normal, lightDirection), 0.0);
-	return(uAmbientLightColor + uDiffuseLightColor * diffuseLightDot);
+	return( uDiffuseLightColor * diffuseLightDot);
 }
 
 vec3 FongLight(vec3 lightDirection, vec3 normal, vec3 vertexPositionEye3) {
@@ -242,8 +250,8 @@ vec3 FongLight(vec3 lightDirection, vec3 normal, vec3 vertexPositionEye3) {
 	// Normalize view vector
 	vec3 viewVectorEye = normalize(-vertexPositionEye3);
 
-	// получаем вектор отраженного луча
-	vec3 reflectionVector = normalize(reflect(-lightDirection, normal));
+	// Вычисляем отражения
+	vec3 reflectionVector = reflect(-lightDirection, normal);
 
 	// Вычисляем specular
 	float specularLightDot = max(dot(reflectionVector, viewVectorEye), 0.0);
@@ -254,56 +262,61 @@ vec3 FongLight(vec3 lightDirection, vec3 normal, vec3 vertexPositionEye3) {
 }
 
 void main(void) {
+	vec3 vLightWeighting = vec3(1.0,1.0,1.0);
+	vec3 newNormal = normalize(vNormal);// - BUMPmapping(vTextureCoord) * 0.75;
 
-vec3 vLightWeighting = vec3(1.0,1.0,1.0);
+	vec4 tex1Color = texture(u1Sampler, vTextureCoord);
+	vec4 tex2Color = texture(u2Sampler, vTextureCoord);
+	vec4 tex3Color = texture(u3Sampler, vTextureCoord);
 
-vec4 tex1Color = texture(u1Sampler, vTextureCoord);
-vec4 tex2Color = texture(u2Sampler, vTextureCoord);
-vec4 tex3Color = texture(u3Sampler, vTextureCoord);
+	if (uShadingFlag == 2) {
 
-vec3 newNormal = normalize(vNormal) - BUMPmapping(vTextureCoord) * 0.75;
+		//Ламберт
+		if (uLightFlag == 1) { vLightWeighting = LambertLight(vLightDirection, newNormal); };
+		
+		//Фонг
+		if (uLightFlag == 2) { vLightWeighting = FongLight(vLightDirection, newNormal, vPositionEye3); };
+	}
 
-if (uShadingFlag == 2) {
-	//Ламберт
-	if (uLightFlag == 1) { 
-		vLightWeighting = LambertLight(vLightDirection, newNormal); 
-	};
-	//Фонг
-	if (uLightFlag == 2) {
-		 vLightWeighting = FongLight(vLightDirection, newNormal, vPositionEye3); 
-	};
+	vec4 combinedColor = vColor;
+	switch (uTextureFlag) {
+	case 1:
+		//С цветом
+		combinedColor = vColor;	    
+		break;
+	case 2:
+		//С первой текстурой (3. Добавить на кубики текстуры с каким-нибудь материалом и смешать с текстурой номеров (иметь возможность менять вклад текстур))
+		//combinedColor = vec4( mix(vColor.rgb, tex2Color.rgb, tex2Color.w * texture_contrib).rgb,vColor.a * tex2Color.a);
+		combinedColor = mix(tex1Color, tex2Color, tex2Color.w * texture_contrib);
+		// vec4(tex1Color.rgb, tex1Color.a * vColor.a);
+		break;
+	case 3:
+		//Со второй текстурой ( 1. Наложить на кубики пьедестала текстуры с номерами 1,2,3)
+		combinedColor = vec4( tex2Color.rgb, tex2Color.a * vColor.a);
+		break;
+	case 4:
+		//С первой и второй текстурой (2. Смешать текстуры номеров с цветом кубиков)
+		combinedColor = mix(vColor, tex2Color, tex2Color.w * texture_contrib);
+		// vec4( mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb , tex1Color.a * tex2Color.a);
+		break;
+	case 5:
+		//Смешать для кубиков цвет+текстуру материала+ текстуру номеров
+		//vec4 combined_texture = mix(tex2Color, tex1Color, tex2Color.w * texture_contrib);
+		//combined_texture = mix(combined_texture, tex1Color, tex1Color.w * texture_contrib);
+		vec4 combined_texture =  mix(vColor, tex2Color, tex2Color.w * texture_contrib);
+		combinedColor = mix(combined_texture, tex1Color, tex1Color.w * texture_contrib);
+		//combinedColor = vec4( mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb * vColor.rgb , tex1Color.a * tex2Color.a * vColor.a);
+		break;
+	case 6:
+		// BUMP
+		
+		//fragColor = vec4(vLightWeighting.rgb * tex3Color.rgb * vAttenuation, tex3Color.a * vColor.a);
+		break;
+	}
+	fragColor = vec4(vLightWeighting.rgb * combinedColor.rgb * vAttenuation, combinedColor.a);
+
 }
-
-fragColor = vec4(vLightWeighting.rgb * vColor.rgb, vColor.a);
-
-switch (uTextureFlag) {
-case 1:
-	//С цветом
-	fragColor = vec4(vLightWeighting.rgb * vColor.rgb * vAttenuation, vColor.a);	    
-	break;
-case 2:
-	//С первой текстурой
-	fragColor = vec4(vLightWeighting.rgb * tex1Color.rgb * vAttenuation, tex1Color.a * vColor.a);
-	break;
-case 3:
-	//Со второй текстурой
-	fragColor = vec4(vLightWeighting.rgb * tex2Color.rgb * vAttenuation, tex2Color.a * vColor.a);
-	break;
-case 4:
-	//С первой и второй текстурой
-	fragColor = vec4(vLightWeighting.rgb * mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb * vAttenuation, tex1Color.a * tex2Color.a);
-	break;
-case 5:
-	//С цветом, первой и второй текстурой
-	fragColor = vec4(vLightWeighting.rgb * mix(tex1Color.rgb,tex2Color.rgb,texture_contrib).rgb * vColor.rgb * vAttenuation, tex1Color.a * tex2Color.a * vColor.a);
-	break;
-case 6:
-	// BUMP (след лаба)
-	fragColor = vec4(vLightWeighting.rgb * tex3Color.rgb * vAttenuation, tex3Color.a * vColor.a);
-	break;
-}
-
-} `;
+`;
 var gl;
 
 var shaderProgram;
@@ -320,6 +333,7 @@ var parameters = {
 	textureParams: {
 		texture_contrib: 0.5
 	},
+	figureId: 1,
 	shadingId: 1,
 	lightingId: 1,
 	rotationId: 1,
@@ -364,15 +378,19 @@ const ySliderRotation = document.getElementById("yRotate");
 ySliderRotation.addEventListener("input",updateParameters)
 const zSliderRotation = document.getElementById("zRotate");
 zSliderRotation.addEventListener("input",updateParameters)
+// Смена центра поворота
+const rotationSelect = document.getElementById("rotationId")
+rotationSelect.addEventListener("input",updateTypeRotation)
 
 const shadingSelect = document.getElementById("shadingId")
 shadingSelect.addEventListener("input",updateShading)
 const lightingSelect = document.getElementById("lightingId")
 lightingSelect.addEventListener("input",updateShading)
-const rotationSelect = document.getElementById("rotationId")
-rotationSelect.addEventListener("input",updateShading)
 const textureSelect = document.getElementById("textureId")
 textureSelect.addEventListener("input",updateShading)
+const figureSelect = document.getElementById("figureId")
+figureSelect.addEventListener("input",updateShading)
+
 
 const amb = document.getElementById("ambient")
 amb.addEventListener("input",updateParameters)
@@ -388,31 +406,48 @@ sliderLineAttenuation.addEventListener("input",updateParameters)
 const sliderQuadAttenuation = document.getElementById("quad_attenuation");
 sliderQuadAttenuation.addEventListener("input",updateParameters)
 
+const sliderTextureContrib = document.getElementById("texture_contrib");
+sliderTextureContrib.addEventListener("input",updateParameters)
+// Преобразование цвета из формата Hex в RGB
+const hexToRgb = hex => {
+    let [r, g, b] = hex.match(/\w\w/g).map(x => parseInt(x, 16));
+    return { r, g, b }
+};
 function updateParameters() {
 	//console.log(parameters);
 	parameters.offset.x=xSliderOffset.valueAsNumber;
 	parameters.offset.y=ySliderOffset.valueAsNumber;
 	parameters.offset.z= zSliderOffset.valueAsNumber;
 	
-	parameters.rotation.x=xSliderRotation.valueAsNumber*Math.PI/2;
-	parameters.rotation.y=ySliderRotation.valueAsNumber*Math.PI/2;
-	parameters.rotation.z=zSliderRotation.valueAsNumber*Math.PI/2;
+	parameters.rotation.x=xSliderRotation.valueAsNumber;
+	parameters.rotation.y=ySliderRotation.valueAsNumber;
+	parameters.rotation.z=zSliderRotation.valueAsNumber;
+
 
 	parameters.lightParams.lin_attenuation=sliderLineAttenuation.valueAsNumber;
 	parameters.lightParams.quad_attenuation= sliderQuadAttenuation.valueAsNumber;
-	// parameters.lightParams.ambient=[amb.value.R,amb.value.g,amb.value.B];
-	// parameters.lightParams.diffuse=[dif.value.R,dif.value.g,dif.value.B];
-	// parameters.lightParams.specular=[spec.value.R,spec.value.g,spec.value.B];
-	// parameters.lightParams.light=[lightCol.value.R,lightCol.value.g,lightCol.value.B];
+	// parameters.lightParams.ambient=hexToRgb(amb.value);
+	// parameters.lightParams.diffuse=hexToRgb(dif.value);
+	// parameters.lightParams.specular=hexToRgb(spec.value);
+	// parameters.lightParams.light=hexToRgb(lightCol.value);
 
+	parameters.textureParams.texture_contrib = sliderTextureContrib.valueAsNumber
+	drawScene()
+}
 
+function updateTypeRotation(){
+	console.log("updateTypeRotation ",parameters);
+	xSliderRotation.value=0;
+	ySliderRotation.value=0;
+	zSliderRotation.value=0;
+	parameters.rotationId = rotationSelect.value;
 	drawScene()
 }
 function updateShading(){
-	parameters.shadingId =shadingSelect.value;
-	parameters.lightingId = lightingSelect.value;
-	parameters.rotationId = rotationSelect.value;
-	parameters.textureId = textureSelect.value;
+	parameters.figureId =parseInt(figureSelect.value);
+	parameters.shadingId =parseInt(shadingSelect.value);
+	parameters.lightingId = parseInt(lightingSelect.value);
+	parameters.textureId = parseInt(textureSelect.value);
 	console.log("updateShading: ",parameters)
 	baseInit()
 }
@@ -421,10 +456,12 @@ function updateShading(){
 function baseInit(callback) {
 
 	switch(parameters.shadingId){
-		case 1: shaderProgram = initShaderProgram(gl, vsFong , fsFong); break;
-		case 2: shaderProgram = initShaderProgram(gl, vsGuro , fsGuro); break;
-		default:shaderProgram = initShaderProgram(gl, vsGuro , fsGuro);
+		case 1: shaderProgram = initShaderProgram(gl, vsGuro , fsGuro); break;
+		case 2: shaderProgram = initShaderProgram(gl, vsFong , fsFong); break;
+		default:shaderProgram = initShaderProgram(gl, vsGuro , vsGuro); break;
 	}
+	if (shaderProgram == null)
+		return;
 	gl.useProgram(shaderProgram);
 	console.log("useProgram")
 	vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
@@ -442,6 +479,7 @@ function baseInit(callback) {
 	// initShaders(parameters.shadingIndex);
 
 	loadTextures([
+		"ice_texture.png",
 		"ground_texture.png",
 		"wood_texture.png",
 		"one_texture.png",
@@ -450,7 +488,7 @@ function baseInit(callback) {
 		"stone.png",
 		"cobblestone.png",
 		"glowstone.png",
-		"bumpMap.jpg",
+		"bumpMap2.jpg",
 		"orange.jpg",
 		"orange_ao.jpg",
 		], function() {
@@ -525,6 +563,7 @@ function drawFigure(model, position, rotation, color, texSrc, tex2Src, tex3Src, 
 	var rotationAxis = [];
 
 	if (raxis.length != 0) {
+		
 		rotationAxis = [-position[0]+raxis[0], -position[1]+raxis[1], -position[2]+raxis[2]];
 	}
 	else {
@@ -830,54 +869,16 @@ function drawFigure(model, position, rotation, color, texSrc, tex2Src, tex3Src, 
 
 		perspective ( 45, window.innerWidth / window.innerHeight, 0.1, 100.0 );
 		console.log(parameters)
-		drawFigure(
-			getCubeElements(), //Model
-			[parameters.offset.x-1, parameters.offset.y, parameters.offset.z], //Offset
-			[parameters.rotation.x, parameters.rotation.y, parameters.rotation.z], //Rotations
-			[1.0,0.0,0.0,1.0], //color
-			"stone.png", //texture
-			"two_texture.png", //texture2
-			"bumpMap.jpg",
-			0.5, //size		
-			raxis // rotation axis
-			);
 
-		drawFigure(
-			getCubeElements(), //Model
-			[parameters.offset.x+1, parameters.offset.y, parameters.offset.z], //Offset
-			[parameters.rotation.x, parameters.rotation.y, parameters.rotation.z], //Rotations
-			[0.0,1.0,0.0,1.0], //color
-			"ground_texture.png", //texture
-			"three_texture.png", //texture2
-			"bumpMap.jpg",
-			0.5, //size		
-			raxis // rotation axis
-			);
-
-		drawFigure(
-			getCubeElements(), //Model
-			[parameters.offset.x, parameters.offset.y, parameters.offset.z], //Offset
-			[parameters.rotation.x, parameters.rotation.y, parameters.rotation.z], //Rotations
-			[0.0,0.0,1.0,1.0], //color
-			"cobblestone.png", //texture
-			"stone.png", //texture2
-			"bumpMap.jpg",
-			0.5, //size		
-			raxis // rotation axis
-			);
-
-		drawFigure(
-			getCubeElements(), //Model
-			[parameters.offset.x, parameters.offset.y+1, parameters.offset.z], //Offset
-			[parameters.rotation.x, parameters.rotation.y, parameters.rotation.z], //Rotations
-			[0.0,1.0,1.0,1.0], //color
-			"wood_texture.png", //texture
-			"one_texture.png", //texture2
-			"bumpMap.jpg", //texture3
-			0.5, //size		
-			raxis // rotation axis
-			);
-
+		switch(parameters.figureId){
+			case 1:
+				drawPedestal(raxis);
+				break;
+			case 2:drawShere(raxis);
+				break;
+				default:drawPedestal(raxis);
+		}
+		//drawPedestal(raxis);
 		//Пример прозрачного кубика
 
 		/*drawFigure(
@@ -893,4 +894,67 @@ function drawFigure(model, position, rotation, color, texSrc, tex2Src, tex3Src, 
 			);*/
 
 		gl.flush();
+	}
+	function drawPedestal(raxis){
+		drawFigure(
+			getCubeElements(), //Model
+			[parameters.offset.x-1, parameters.offset.y, parameters.offset.z], //Offset
+			[parameters.rotation.x, parameters.rotation.y, parameters.rotation.z], //Rotations
+			[1.0,0.0,0.0,1.0
+			], //color
+			"ice_texture.png", //texture
+			"two_texture.png", //texture2
+			"bumpMap2.jpg",
+			0.5, //size		
+			raxis // rotation axis
+			);
+
+		drawFigure(
+			getCubeElements(), //Model
+			[parameters.offset.x+1, parameters.offset.y, parameters.offset.z], //Offset
+			[parameters.rotation.x, parameters.rotation.y, parameters.rotation.z], //Rotations
+			[0.0,1.0,0.0,1.0], //color
+			"ground_texture.png", //texture
+			"three_texture.png", //texture2
+			"bumpMap2.jpg",
+			0.5, //size		
+			raxis // rotation axis
+			);
+
+		drawFigure(
+			getCubeElements(), //Model
+			[parameters.offset.x, parameters.offset.y, parameters.offset.z], //Offset
+			[parameters.rotation.x, parameters.rotation.y, parameters.rotation.z], //Rotations
+			[0.0,0.0,1.0,1.0], //color
+			"cobblestone.png", //texture
+			"wood_texture.png", //texture2
+			"bumpMap2.jpg",
+			0.5, //size		
+			raxis // rotation axis
+			);
+
+		drawFigure(
+			getCubeElements(), //Model
+			[parameters.offset.x, parameters.offset.y+1, parameters.offset.z], //Offset
+			[parameters.rotation.x, parameters.rotation.y, parameters.rotation.z], //Rotations
+			[0.0,1.0,1.0,1.0], //color
+			"wood_texture.png", //texture
+			"one_texture.png", //texture2
+			"bumpMap2.jpg", //texture3
+			0.5, //size		
+			raxis // rotation axis
+			);
+	}
+	function drawShere(raxis){
+		drawFigure(
+			models.sphere,
+			[parameters.offset.x, parameters.offset.y, parameters.offset.z], //Offset
+			[parameters.rotation.x, parameters.rotation.y, parameters.rotation.z], //Rotations
+			[1.0,0.0,0.0,1.0], //color
+			"orange.jpg", //texture
+			"orange.jpg", //texture2
+			"orange_ao.jpg", //texture3
+			0.7, //size		
+			raxis
+			);
 	}
